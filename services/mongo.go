@@ -1,28 +1,42 @@
 package services
 
 import (
-    "time"
     "context"
+    "fmt"
+    "log"
+    "time"
 
-    "github.com/astaxie/beego"
+	beego "github.com/beego/beego/v2/server/web"
+
     "go.mongodb.org/mongo-driver/mongo"
     "go.mongodb.org/mongo-driver/mongo/options"
-    //"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 type DBContext struct {
     Client *mongo.Client
+    Data *mongo.Database
 }
 
 var DB DBContext
 
 func InitDBContext() {
-    dbUrl := beego.AppConfig.String("DB_URL")
+    dbUrlformat, _ := beego.AppConfig.String("DB_URL")
+    dbUser, _ := beego.AppConfig.String("DB_USERNAME")
+    dbPass, _ := beego.AppConfig.String("DB_PASSWORD")
+    dbName, _ := beego.AppConfig.String("DB_NAME")
+
+    dbUrl := fmt.Sprintf(dbUrlformat, dbUser, dbPass, dbName)
+    clientOptions := options.Client().ApplyURI(dbUrl)
 
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
 
-    client, _ := mongo.Connect(ctx, options.Client().ApplyURI(dbUrl))
+    client, err := mongo.Connect(ctx, clientOptions)
+    if err != nil {
+        log.Fatal(err)
+    }
+
     DB.Client = client
-    // TO TEST THIS
+    DB.Data = client.Database(dbName)
 }
+

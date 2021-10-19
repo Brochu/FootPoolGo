@@ -15,3 +15,5 @@
 # vendor/
 
 lastupdate.tmp
+
+conf/app.conf

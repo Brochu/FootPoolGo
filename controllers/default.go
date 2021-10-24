@@ -17,6 +17,7 @@ type MainController struct {
 func (c *MainController) Get() {
 	c.Data["Website"] = "beego.me"
 	c.Data["Email"] = "astaxie@gmail.com"
+	c.Layout = "layout.html"
 	c.TplName = "index.tpl"
 
     test := services.DB.Data.Collection("poolers")

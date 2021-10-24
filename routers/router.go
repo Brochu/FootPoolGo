@@ -6,10 +6,10 @@ import (
 )
 
 func init() {
-    // Login
-    beego.Router("/", &controllers.LoginController{})
+    beego.Router("/", &controllers.MainController{})
+
+    beego.Router("/auth/login", &controllers.LoginController{}, "get:Login")
     beego.Router("/auth/google_oauth2/callback", &controllers.LoginController{}, "*:Callback")
 
-    // Content
-    beego.Router("/pools", &controllers.MainController{})
+    beego.Router("/pools", &controllers.PoolsController{})
 }

@@ -37,7 +37,7 @@ func InitOAuthConfig() {
 }
 
 func GetAuthURLFromConf(state string) string {
-    opts := oauth2.SetAuthURLParam("sldkfj", "dfd")
+    opts := oauth2.SetAuthURLParam("prompt", "select_account")
     conf.AuthCodeURL(state, opts)
 
     return conf.AuthCodeURL(state)

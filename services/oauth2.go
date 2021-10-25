@@ -1,8 +1,11 @@
 package services
 
 import (
-    "log"
+    "crypto/rand"
     "encoding/json"
+    "encoding/base64"
+    "io/ioutil"
+    "log"
 
 	beego "github.com/beego/beego/v2/server/web"
 
@@ -11,6 +14,7 @@ import (
 )
 
 var conf *oauth2.Config
+var queryURL string
 
 func InitOAuthConfig() {
     test, err := beego.AppConfig.String("oauth2GoogleConfig")
@@ -34,12 +38,54 @@ func InitOAuthConfig() {
         },
         Endpoint: google.Endpoint,
     }
+
+    queryURL = "https://www.googleapis.com/oauth2/v3/userinfo"
 }
 
-func GetAuthURLFromConf(state string) string {
-    opts := oauth2.SetAuthURLParam("prompt", "select_account")
-    conf.AuthCodeURL(state, opts)
+func GetAuthURLFromConf() (string, string) {
 
-    return conf.AuthCodeURL(state)
+    state := randToken()
+    opts := oauth2.SetAuthURLParam("prompt", "select_account")
+
+    return conf.AuthCodeURL(state, opts), state
+}
+
+func FetchEmail(gotState string, genState, code string) (bool, string) {
+
+    // State check
+    if gotState != genState {
+        return false, "[OAUTH2] Could not fetch email: Mismatched states";
+    }
+
+    // Code check
+    tok, err := conf.Exchange(oauth2.NoContext, code)
+    if err != nil {
+        return false, "[OAUTH2] Could not fetch email: Invalid code"
+    }
+
+    // Fetch request
+    client := conf.Client(oauth2.NoContext, tok)
+    info, err := client.Get(queryURL)
+    if err != nil {
+        return false, "[OAUTH2] Could not fetch email: Query failed"
+    }
+
+    // Read response
+    defer info.Body.Close()
+    data, _ := ioutil.ReadAll(info.Body)
+
+    // Parse response
+    var parsed map[string]interface{}
+    json.Unmarshal([]byte(data), &parsed)
+
+    return true, parsed["email"].(string)
+}
+
+func randToken() string {
+
+    b := make([]byte, 32)
+    rand.Read(b)
+
+    return base64.StdEncoding.EncodeToString(b)
 }
 

@@ -10,6 +10,7 @@ type PoolsController struct {
 
 func (c *PoolsController) Get() {
 
+    c.Data["test"] = c.GetSession("oauthState")
     c.TplName = "listPoolsTemplate.tpl"
     c.Layout = "layout.html"
 

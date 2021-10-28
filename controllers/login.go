@@ -1,8 +1,6 @@
 package controllers
 
 import (
-    "log"
-
     "FootPoolGo/services"
 
 	beego "github.com/beego/beego/v2/server/web"
@@ -38,11 +36,7 @@ func (c *LoginController) Callback() {
         return
     }
 
-    log.Printf("[LOGIN] Got the email here => %v\n", email)
-    // use email to find userid -> poolerid
     userId, poolerId := services.DB.FetchPooler(email)
-
-    // store poolerid in session
     c.SetSession("userId", userId)
     c.SetSession("poolerId", poolerId)
 

@@ -10,6 +10,12 @@ type MainController struct {
 
 func (c *MainController) Get() {
 
-    c.Redirect("/auth/login", 302)
+    poolerId := c.GetSession("poolerId")
+
+    if poolerId == nil {
+        c.Redirect("/auth/login", 302)
+    } else {
+        c.Redirect("/pools", 302)
+    }
 }
 

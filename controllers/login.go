@@ -40,7 +40,11 @@ func (c *LoginController) Callback() {
 
     log.Printf("[LOGIN] Got the email here => %v\n", email)
     // use email to find userid -> poolerid
+    userId, poolerId := services.DB.FetchPooler(email)
+
     // store poolerid in session
+    c.SetSession("userId", userId)
+    c.SetSession("poolerId", poolerId)
 
     c.Redirect("/pools", 302)
 }

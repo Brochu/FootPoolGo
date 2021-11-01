@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-    services.InitDBContext()
+    services.DB.InitDBContext()
     services.OAuth.InitOAuthConfig()
 
 	beego.Run()

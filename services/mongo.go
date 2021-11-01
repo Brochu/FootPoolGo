@@ -51,7 +51,7 @@ type Pick struct {
 
 var DB DBContext
 
-func InitDBContext() {
+func (db* DBContext) InitDBContext() {
     dbUrlformat, _ := beego.AppConfig.String("DB_URL")
     dbUser, _ := beego.AppConfig.String("DB_USERNAME")
     dbPass, _ := beego.AppConfig.String("DB_PASSWORD")

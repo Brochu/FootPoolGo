@@ -28,6 +28,8 @@ func (c *PoolsController) Get() {
         log.Printf("* %v : %v\n", w, services.GetWeekLongName(w))
     }
 
+    //log.Printf("info: %v; %v", c.GetSession("userId"), c.GetSession("poolerId"))
+
     c.TplName = "listPoolsTemplate.tpl"
     c.Layout = "layout.html"
 

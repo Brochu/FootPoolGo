@@ -14,7 +14,7 @@ type LoginController struct {
 func (c *LoginController) Login() {
 
     var state = ""
-    c.Data["loginURL"], state = services.GetAuthURLFromConf()
+    c.Data["loginURL"], state = services.OAuth.GetAuthURLFromConf()
     c.SetSession("oauthState", state)
 
 
@@ -26,7 +26,7 @@ func (c *LoginController) Callback() {
 
     // Handle results of the login
 
-    success, email := services.FetchEmail(
+    success, email := services.OAuth.FetchEmail(
         c.GetSession("oauthState").(string),
         c.GetString("state"),
         c.GetString("code"),

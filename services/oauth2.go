@@ -13,10 +13,14 @@ import (
     "golang.org/x/oauth2/google"
 )
 
+type OAuth2 struct {
+}
+
+var OAuth OAuth2
 var conf *oauth2.Config
 var queryURL string
 
-func InitOAuthConfig() {
+func (o OAuth2) InitOAuthConfig() {
     test, err := beego.AppConfig.String("oauth2GoogleConfig")
 
     if err != nil {
@@ -42,7 +46,7 @@ func InitOAuthConfig() {
     queryURL = "https://www.googleapis.com/oauth2/v3/userinfo"
 }
 
-func GetAuthURLFromConf() (string, string) {
+func (o OAuth2) GetAuthURLFromConf() (string, string) {
 
     state := randToken()
     opts := oauth2.SetAuthURLParam("prompt", "select_account")
@@ -50,7 +54,7 @@ func GetAuthURLFromConf() (string, string) {
     return conf.AuthCodeURL(state, opts), state
 }
 
-func FetchEmail(gotState string, genState, code string) (bool, string) {
+func (o OAuth2) FetchEmail(gotState string, genState, code string) (bool, string) {
 
     // State check
     if gotState != genState {

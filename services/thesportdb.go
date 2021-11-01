@@ -105,13 +105,45 @@ func GetLonganme(shortname string) string {
 }
 
 func GetWeekName(weekNum int) string {
-    //TODO: return week name for playoff games
-    return ""
+    if weekNum <= 18 {
+
+        return fmt.Sprint(weekNum)
+    } else if weekNum == 19 {
+
+        return "WC"
+    } else if weekNum == 20 {
+
+        return "DV"
+    } else if weekNum == 21 {
+
+        return "CF"
+    } else if weekNum == 22 {
+
+        return "SB"
+    }
+
+    return "INVALID"
 }
 
 func GetWeekLongName(weekNum int) string {
-    //TODO: return week name for playoff games
-    return ""
+    if weekNum <= 18 {
+
+        return fmt.Sprintf("semaine %d", weekNum)
+    } else if weekNum == 19 {
+
+        return "WildCards"
+    } else if weekNum == 20 {
+
+        return "Division Round"
+    } else if weekNum == 21 {
+
+        return "Conference Championship"
+    } else if weekNum == 22 {
+
+        return "SuperBowl"
+    }
+
+    return "INVALID"
 }
 
 //--------------------------------------------------

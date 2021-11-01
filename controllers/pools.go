@@ -13,10 +13,6 @@ type PoolsController struct {
 
 func (c *PoolsController) Get() {
 
-    c.Data["test0"] = c.GetSession("oauthState")
-    c.Data["test1"] = c.GetSession("userId")
-    c.Data["test2"] = c.GetSession("poolerId")
-
     res := services.FetchMathes(2021, 1)
     for _, m := range res {
         log.Printf("* %v\n", m)
@@ -24,7 +20,12 @@ func (c *PoolsController) Get() {
 
     teams := services.GetTeams()
     for _, t := range teams {
-        log.Printf("* %v\n", t)
+        log.Printf("* %v = %v\n", t, services.GetLonganme(t))
+    }
+
+    weeks := []int { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22 }
+    for _, w := range weeks {
+        log.Printf("* %v : %v\n", w, services.GetWeekLongName(w))
     }
 
     c.TplName = "listPoolsTemplate.tpl"

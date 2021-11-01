@@ -11,6 +11,11 @@ import (
 	beego "github.com/beego/beego/v2/server/web"
 )
 
+type SportsDbAPI struct {
+}
+
+var NflAPI SportsDbAPI
+
 var shortname_map = map[string]string{
     "ARI" : "Arizona Cardinals",
     "ATL" : "Atlanta Falcons",
@@ -84,7 +89,7 @@ var longname_map = map[string]string{
     "Washington Redskins" : "WAS",
 }
 
-func GetTeams() []string {
+func (s* SportsDbAPI) GetTeams() []string {
     i := 0
     teams := make([]string, len(shortname_map))
 
@@ -96,15 +101,15 @@ func GetTeams() []string {
     return teams
 }
 
-func GetShortname(longname string) string {
+func (s* SportsDbAPI) GetShortname(longname string) string {
     return longname_map[longname]
 }
 
-func GetLonganme(shortname string) string {
+func (s* SportsDbAPI) GetLonganme(shortname string) string {
     return shortname_map[shortname]
 }
 
-func GetWeekName(weekNum int) string {
+func (s* SportsDbAPI) GetWeekName(weekNum int) string {
     if weekNum <= 18 {
 
         return fmt.Sprint(weekNum)
@@ -125,7 +130,7 @@ func GetWeekName(weekNum int) string {
     return "INVALID"
 }
 
-func GetWeekLongName(weekNum int) string {
+func (s* SportsDbAPI) GetWeekLongName(weekNum int) string {
     if weekNum <= 18 {
 
         return fmt.Sprintf("semaine %d", weekNum)
@@ -199,7 +204,7 @@ func (parsed *ParsedMatch) convert() Match {
     return m
 }
 
-func FetchMathes(season int, week int) []Match {
+func (s* SportsDbAPI) FetchMatches(season int, week int) []Match {
     dataUrl, _ := beego.AppConfig.String("THESPORTDB_URL")
     url := fmt.Sprintf(dataUrl, season, week)
 

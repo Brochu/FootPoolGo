@@ -58,7 +58,7 @@ func (o OAuth2) FetchEmail(gotState string, genState, code string) (bool, string
 
     // State check
     if gotState != genState {
-        return false, "[OAUTH2] Could not fetch email: Mismatched states";
+        return false, "[OAUTH2] Could not fetch email: Mismatched states"
     }
 
     // Code check

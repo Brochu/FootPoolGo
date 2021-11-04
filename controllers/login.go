@@ -18,7 +18,7 @@ func (c *LoginController) Login() {
     c.SetSession("oauthState", state)
 
 
-	c.TplName = "loginTemplate.tpl"
+	c.TplName = "login.tpl"
     c.Render()
 }
 

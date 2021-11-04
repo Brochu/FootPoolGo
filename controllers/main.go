@@ -13,9 +13,7 @@ func (c *MainController) Get() {
     poolerId := c.GetSession("poolerId")
 
     if poolerId == nil {
-        // TEMP EZ DEBUG
-        //TODO: REMOVE THIS
-        c.Redirect("/pools", 302)
+        c.Redirect("/auth/login", 302)
     } else {
         c.Redirect("/pools", 302)
     }

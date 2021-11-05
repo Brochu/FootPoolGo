@@ -73,7 +73,7 @@ func (db* DBContext) InitDBContext() {
 }
 
 // Database queries
-func (db* DBContext) FetchPooler(email string) (string, string) {
+func (db* DBContext) FetchPooler(email string) (primitive.ObjectID, primitive.ObjectID) {
     userCollection, _ := beego.AppConfig.String("DB_USER_COLLECT")
     filter := bson.M{
         "email": email,
@@ -96,6 +96,49 @@ func (db* DBContext) FetchPooler(email string) (string, string) {
         log.Fatalf("[MONGO] Could not parse results for FetchPooler!")
     }
 
-    return u.ID.Hex(), p.ID.Hex()
+    return u.ID, p.ID
+}
+
+func (db* DBContext) FetchAllPicksCurrentWeek(pooler primitive.ObjectID) []Pick {
+    picksCollection, _ := beego.AppConfig.String("DB_PICK_COLLECT")
+
+    poolerFilter := bson.M{
+        "pooler_id": pooler,
+    }
+    opts := options.FindOneOptions{}
+    opts.SetSort(bson.D{{Key:"season",Value:-1}})
+
+    // Find latest season pooler's picks
+    var ps Pick
+    err := DB.Data.Collection(picksCollection).FindOne(context.TODO(), poolerFilter, &opts).Decode(&ps)
+    if err != nil {
+        log.Fatalf("[MONGO] Could not parse results for getting most recent picks season")
+    }
+
+    seasonFiter := bson.M{
+        "pooler_id": pooler,
+        "season": ps.Season,
+    }
+    weekOpts := options.FindOneOptions{}
+    weekOpts.SetSort(bson.D{{Key:"week",Value:-1}})
+
+    // Find latest week pooler's picks
+    var pw Pick
+    err = DB.Data.Collection(picksCollection).FindOne(context.TODO(), seasonFiter, &weekOpts).Decode(&pw)
+    if err != nil {
+        log.Fatalf("[MONGO] Could not parse results for getting most recent picks week")
+    }
+
+    season, week := ps.Season, pw.Week
+
+    // Call FetchAllPicks for current pooler and found season and week
+    return db.FetchAllPicks(pooler, season, week)
+}
+
+func (db* DBContext) FetchAllPicks(pooler primitive.ObjectID, season int, week int) []Pick {
+    log.Printf("[MongoService] Fetching all picks for season:%v; week:%v", season, week)
+
+    //TODO: Find all picks for the pooler's pool
+    return make([]Pick, 16)
 }
 

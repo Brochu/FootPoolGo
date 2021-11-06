@@ -15,13 +15,9 @@ type PoolsController struct {
 func (c *PoolsController) Get() {
 
     poolerId := c.GetSession("poolerId").(primitive.ObjectID)
+    matches := services.NflAPI.FetchMatches(2021, 9)
 
-    matches := services.NflAPI.FetchMatches(2021, 1)
-    for i, m := range matches {
-        log.Printf("[%v] %v\n", i, m)
-    }
-
-    picks := services.DB.FetchAllPicksCurrentWeek(poolerId)
+    season, week, picks := services.DB.FetchAllPicksCurrentWeek(poolerId)
     for i, p := range picks {
         log.Printf("[%v] %v", i, p)
     }
@@ -29,8 +25,8 @@ func (c *PoolsController) Get() {
     c.Layout = "layout.html"
     c.TplName = "Pools-index.tpl"
 
-    c.Data["season"] = 9999
-    c.Data["week"] = 99
+    c.Data["season"] = season
+    c.Data["week"] = week
 
     c.Data["user"] = (c.GetSession("userId").(primitive.ObjectID)).Hex()
     c.Data["pooler"] = poolerId.Hex()

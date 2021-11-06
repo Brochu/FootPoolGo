@@ -5,6 +5,7 @@ import (
     "fmt"
     "log"
     "time"
+    "encoding/json"
 
 	beego "github.com/beego/beego/v2/server/web"
 
@@ -65,7 +66,7 @@ func (db* DBContext) InitDBContext() {
 
     client, err := mongo.Connect(ctx, clientOptions)
     if err != nil {
-        log.Fatal(err)
+        log.Fatalf("[MONGO][InitDBContext] - %v", err)
     }
 
     DB.Client = client
@@ -75,14 +76,14 @@ func (db* DBContext) InitDBContext() {
 // Database queries
 func (db* DBContext) FetchPooler(email string) (primitive.ObjectID, primitive.ObjectID) {
     userCollection, _ := beego.AppConfig.String("DB_USER_COLLECT")
-    filter := bson.M{
+    filter := bson.M {
         "email": email,
     }
 
     var u User
     err := db.Data.Collection(userCollection).FindOne(context.TODO(), filter).Decode(&u)
     if err != nil {
-        log.Fatalf("[MONGO] Could not parse results for FetchPooler!")
+        log.Fatalf("[MONGO][FetchPooler] find user - %v", err)
     }
 
     poolerCollection, _ := beego.AppConfig.String("DB_POOLER_COLLECT")
@@ -93,16 +94,16 @@ func (db* DBContext) FetchPooler(email string) (primitive.ObjectID, primitive.Ob
     var p Pooler
     err = db.Data.Collection(poolerCollection).FindOne(context.TODO(), poolerFilter).Decode(&p)
     if err != nil {
-        log.Fatalf("[MONGO] Could not parse results for FetchPooler!")
+        log.Fatalf("[MONGO][FetchPooler] find pooler - %v", err)
     }
 
     return u.ID, p.ID
 }
 
-func (db* DBContext) FetchAllPicksCurrentWeek(pooler primitive.ObjectID) []Pick {
+func (db* DBContext) FetchAllPicksCurrentWeek(pooler primitive.ObjectID) (int, int, map[string]string) {
     picksCollection, _ := beego.AppConfig.String("DB_PICK_COLLECT")
 
-    poolerFilter := bson.M{
+    poolerFilter := bson.M {
         "pooler_id": pooler,
     }
     opts := options.FindOneOptions{}
@@ -112,10 +113,10 @@ func (db* DBContext) FetchAllPicksCurrentWeek(pooler primitive.ObjectID) []Pick 
     var ps Pick
     err := DB.Data.Collection(picksCollection).FindOne(context.TODO(), poolerFilter, &opts).Decode(&ps)
     if err != nil {
-        log.Fatalf("[MONGO] Could not parse results for getting most recent picks season")
+        log.Fatalf("[MONGO][FetchAllPicksCurrentWeek] find season - %v", err)
     }
 
-    seasonFiter := bson.M{
+    seasonFiter := bson.M {
         "pooler_id": pooler,
         "season": ps.Season,
     }
@@ -126,19 +127,30 @@ func (db* DBContext) FetchAllPicksCurrentWeek(pooler primitive.ObjectID) []Pick 
     var pw Pick
     err = DB.Data.Collection(picksCollection).FindOne(context.TODO(), seasonFiter, &weekOpts).Decode(&pw)
     if err != nil {
-        log.Fatalf("[MONGO] Could not parse results for getting most recent picks week")
+        log.Fatalf("[MONGO][FetchAllPicksCurrentWeek] find week - %v", err)
     }
 
-    season, week := ps.Season, pw.Week
-
-    // Call FetchAllPicks for current pooler and found season and week
-    return db.FetchAllPicks(pooler, season, week)
+    return ps.Season, pw.Week, db.FetchAllPicks(pooler, ps.Season, pw.Week)
 }
 
-func (db* DBContext) FetchAllPicks(pooler primitive.ObjectID, season int, week int) []Pick {
+func (db* DBContext) FetchAllPicks(pooler primitive.ObjectID, season int, week int) map[string]string {
+    picksCollection, _ := beego.AppConfig.String("DB_PICK_COLLECT")
+
+    picksFilter := bson.M {
+        "pooler_id": pooler,
+        "season": season,
+        "week": week,
+    }
     log.Printf("[MongoService] Fetching all picks for season:%v; week:%v", season, week)
 
-    //TODO: Find all picks for the pooler's pool
-    return make([]Pick, 16)
+    var p Pick
+    err := DB.Data.Collection(picksCollection).FindOne(context.TODO(), picksFilter).Decode(&p)
+    if err != nil {
+        log.Fatalf("[MONGO][FetchAllPicks] season |%v| week |%v| - %v", season, week, err)
+    }
+
+    var picks map[string]string
+    json.Unmarshal([]byte(p.PickString), &picks)
+    return picks
 }
 

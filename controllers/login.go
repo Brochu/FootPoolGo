@@ -36,9 +36,10 @@ func (c *LoginController) Callback() {
         return
     }
 
-    userId, poolerId := services.DB.FetchPooler(email)
+    userId, poolerId, poolId := services.DB.FetchPooler(email)
     c.SetSession("userId", userId)
     c.SetSession("poolerId", poolerId)
+    c.SetSession("poolId", poolId)
 
     c.Redirect("/pools", 302)
 }

@@ -11,7 +11,7 @@ import (
 
     "go.mongodb.org/mongo-driver/mongo"
     "go.mongodb.org/mongo-driver/bson"
-    "go.mongodb.org/mongo-driver/bson/primitive"
+    prim "go.mongodb.org/mongo-driver/bson/primitive"
     "go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -21,7 +21,7 @@ type DBContext struct {
 }
 
 type User struct {
-    ID primitive.ObjectID `bson:"_id"`
+    ID prim.ObjectID `bson:"_id"`
     Email string `bson:"email"`
     AccessLevel string `bson:"accesslevel"`
     Token string `bson:"token"`
@@ -29,24 +29,24 @@ type User struct {
 }
 
 type Pooler struct {
-    ID primitive.ObjectID `bson:"_id"`
+    ID prim.ObjectID `bson:"_id"`
     Name string `bson:"name"`
     FavTeam string `bson:"favTeam"`
-    PoolId primitive.ObjectID `bson:"pool_id"`
-    UserId primitive.ObjectID `bson:"user_id"`
+    PoolId prim.ObjectID `bson:"pool_id"`
+    UserId prim.ObjectID `bson:"user_id"`
 }
 
 type Pool struct {
-    ID primitive.ObjectID `bson:"_id"`
+    ID prim.ObjectID `bson:"_id"`
     Name string `bson:"name"`
     Motp string `bson:"motp"`
 }
 
 type Pick struct {
-    ID primitive.ObjectID `bson:"_id"`
+    ID prim.ObjectID `bson:"_id"`
     Season int `bson:"season"`
     Week int `bson:"week"`
-    Pooler primitive.ObjectID `bson:"pooler_id"`
+    Pooler prim.ObjectID `bson:"pooler_id"`
     PickString string `bson:"pickstring"`
 }
 
@@ -74,7 +74,7 @@ func (db* DBContext) InitDBContext() {
 }
 
 // Database queries
-func (db* DBContext) FetchPooler(email string) (primitive.ObjectID, primitive.ObjectID) {
+func (db* DBContext) FetchPooler(email string) (prim.ObjectID, prim.ObjectID, prim.ObjectID) {
     userCollection, _ := beego.AppConfig.String("DB_USER_COLLECT")
     filter := bson.M {
         "email": email,
@@ -97,10 +97,10 @@ func (db* DBContext) FetchPooler(email string) (primitive.ObjectID, primitive.Ob
         log.Fatalf("[MONGO][FetchPooler] find pooler - %v", err)
     }
 
-    return u.ID, p.ID
+    return u.ID, p.ID, p.PoolId
 }
 
-func (db* DBContext) FetchAllPicksCurrentWeek(pooler primitive.ObjectID) (int, int, map[string]string) {
+func (db* DBContext) FetchCurrentWeek(pooler prim.ObjectID) (int, int) {
     picksCollection, _ := beego.AppConfig.String("DB_PICK_COLLECT")
 
     poolerFilter := bson.M {
@@ -130,10 +130,21 @@ func (db* DBContext) FetchAllPicksCurrentWeek(pooler primitive.ObjectID) (int, i
         log.Fatalf("[MONGO][FetchAllPicksCurrentWeek] find week - %v", err)
     }
 
-    return ps.Season, pw.Week, db.FetchAllPicks(pooler, ps.Season, pw.Week)
+    return ps.Season, pw.Week
 }
 
-func (db* DBContext) FetchAllPicks(pooler primitive.ObjectID, season int, week int) map[string]string {
+func (db* DBContext) FetchPoolPicks(pool prim.ObjectID, season int, week int) map[prim.ObjectID]map[string]string {
+    //TODO: Get all poolers from pool
+    //TODO: Fetch picks for each poolers, aggregate all into one map
+
+    result := make(map[prim.ObjectID]map[string]string)
+    result[pool] = make(map[string]string)
+    result[pool]["test"] = "match"
+
+    return result
+}
+
+func (db* DBContext) FetchPoolerPicks(pooler prim.ObjectID, season int, week int) map[string]string {
     picksCollection, _ := beego.AppConfig.String("DB_PICK_COLLECT")
 
     picksFilter := bson.M {

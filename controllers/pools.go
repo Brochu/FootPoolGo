@@ -15,11 +15,19 @@ type PoolsController struct {
 func (c *PoolsController) Get() {
 
     poolerId := c.GetSession("poolerId").(primitive.ObjectID)
+    poolId := c.GetSession("poolId").(primitive.ObjectID)
+
     matches := services.NflAPI.FetchMatches(2021, 9)
 
-    season, week, picks := services.DB.FetchAllPicksCurrentWeek(poolerId)
+    season, week := services.DB.FetchCurrentWeek(poolerId)
+    picks := services.DB.FetchPoolerPicks(poolerId, season, week)
     for i, p := range picks {
-        log.Printf("[%v] %v", i, p)
+        log.Printf("[%v] %v\n", i, p)
+    }
+
+    poolPicks := services.DB.FetchPoolPicks(poolId, season, week)
+    for i, p := range poolPicks {
+        log.Printf("[%v] %v\n", i, p)
     }
 
     c.Layout = "layout.html"

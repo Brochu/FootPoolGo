@@ -30,9 +30,7 @@
 
             <div>{{.EventId}}</div>
 
-            {{ range .picks[.EventId] }}
-                <div>lo</div>
-            {{ end }}
+            {{ $curr := .picks }}
         {{ end }}
     </div>
 

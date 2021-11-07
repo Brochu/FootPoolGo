@@ -11,6 +11,11 @@ type PoolsController struct {
 	beego.Controller
 }
 
+type MatchData struct {
+    match services.Match
+    picks []map[primitive.ObjectID]string
+}
+
 func (c *PoolsController) Get() {
 
     poolerId := c.GetSession("poolerId").(primitive.ObjectID)
@@ -36,6 +41,7 @@ func (c *PoolsController) Get() {
 
     c.Data["user"] = (c.GetSession("userId").(primitive.ObjectID)).Hex()
     c.Data["pooler"] = poolerId.Hex()
+    //TODO: use MatchData struct to send this info in an object instead, easier for rendering
     c.Data["matches"] = matches
     c.Data["picks"] = poolPicks
 

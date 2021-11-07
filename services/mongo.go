@@ -105,6 +105,28 @@ func (db* DBContext) FetchPooler(email string) (prim.ObjectID, prim.ObjectID, pr
 }
 
 //-----------------------------------
+// GET POOLER INFO
+// ret: User Id, Pooler Id, Pool Id
+//-----------------------------------
+func (db* DBContext) FetchPoolersFromPool(pool prim.ObjectID) []Pooler {
+    // Get all poolers from pool
+    poolersCol, _ := beego.AppConfig.String("DB_POOLER_COLLECT")
+    poolFilter := bson.M {
+        "pool_id": pool,
+    }
+    cursor, err := DB.Data.Collection(poolersCol).Find(context.TODO(), poolFilter)
+    if err != nil {
+        log.Fatalf("[MONGO][FetchPoolersFromPool] with pool %v - %v", pool, err)
+    }
+    defer cursor.Close(context.TODO())
+
+    var poolers []Pooler
+    cursor.All(context.TODO(), &poolers)
+
+    return poolers
+}
+
+//-----------------------------------
 // GET CURRENT WEEK
 // ret: Season , Week
 //-----------------------------------
@@ -142,67 +164,38 @@ func (db* DBContext) FetchCurrentWeek(pooler prim.ObjectID) (int, int) {
 }
 
 //-----------------------------------
-// GET PICKS FOR ALL MEMBERS IN THE SENT POOL ID
+// GET PICKS FOR GIVEN POOLER ID(s)
 // ret: map[poolerId] => map[matchId] => match pick
 //-----------------------------------
-func (db* DBContext) FetchPoolPicks(pool prim.ObjectID, season int, week int) map[string]map[prim.ObjectID]string {
-    // Get all poolers from pool
-    poolersCol, _ := beego.AppConfig.String("DB_POOLER_COLLECT")
-    poolFilter := bson.M {
-        "pool_id": pool,
-    }
-    cursor, err := DB.Data.Collection(poolersCol).Find(context.TODO(), poolFilter)
-    if err != nil {
-        log.Fatalf("[MONGO][FetchPoolPicks] season |%v| week |%v| - %v", season, week, err)
-    }
-    defer cursor.Close(context.TODO())
+func (db* DBContext) FetchPicks(poolers []Pooler, season int, week int) map[string]map[prim.ObjectID]string {
+    picksCollection, _ := beego.AppConfig.String("DB_PICK_COLLECT")
 
     result := make(map[string]map[prim.ObjectID]string)
-    for cursor.Next(context.TODO()) {
-        var p Pooler
-        cursor.Decode(&p)
+    for _, pooler := range poolers {
+        picksFilter := bson.M {
+            "pooler_id": pooler.ID,
+            "season": season,
+            "week": week,
+        }
 
-        // Fetch picks for each poolers, aggregate all into one map
-        picksData := DB.FetchPoolerPicks(p.ID, season, week)
-        for matchId, pick := range picksData {
-            if m, ok := result[matchId]; ok {
-                m[p.ID] = pick
-            } else {
-                result[matchId] = make(map[prim.ObjectID]string)
-                result[matchId][p.ID] = pick
+        dbPick := DB.Data.Collection(picksCollection).FindOne(context.TODO(), picksFilter)
+        if dbPick.Err() == nil {
+            var picks map[string]string
+            var p Pick
+            dbPick.Decode(&p)
+            json.Unmarshal([]byte(p.PickString), &picks)
+
+            for matchId, pick := range picks {
+                if matchData, ok := result[matchId]; ok {
+                    matchData[pooler.ID] = pick
+                } else {
+                    result[matchId] = make(map[prim.ObjectID]string)
+                    result[matchId][pooler.ID] = pick
+                }
             }
         }
     }
 
     return result
-}
-
-//-----------------------------------
-// GET PICKS FOR GIVEN POOLER ID
-// ret: map[matchId] => match pick
-//-----------------------------------
-func (db* DBContext) FetchPoolerPicks(pooler prim.ObjectID, season int, week int) map[string]string {
-    picksCollection, _ := beego.AppConfig.String("DB_PICK_COLLECT")
-
-    picksFilter := bson.M {
-        "pooler_id": pooler,
-        "season": season,
-        "week": week,
-    }
-
-    cursor, err := DB.Data.Collection(picksCollection).Find(context.TODO(), picksFilter)
-    if err != nil {
-        log.Fatalf("[MONGO][FetchPoolerPicks] season |%v| week |%v| - %v", season, week, err)
-    }
-    defer cursor.Close(context.TODO())
-
-    var picks map[string]string
-    for cursor.Next(context.TODO()) {
-        var p Pick
-        cursor.Decode(&p)
-        json.Unmarshal([]byte(p.PickString), &picks)
-    }
-
-    return picks
 }
 

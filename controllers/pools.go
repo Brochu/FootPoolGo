@@ -1,6 +1,7 @@
 package controllers
 
 import (
+    "log"
     "FootPoolGo/services"
 
 	beego "github.com/beego/beego/v2/server/web"
@@ -22,16 +23,22 @@ func (c *PoolsController) Get() {
     poolId := c.GetSession("poolId").(primitive.ObjectID)
 
     matches := services.NflAPI.FetchMatches(2021, 9)
+    for _, match := range matches {
+        log.Printf("[%v] > %v\n", match.EventId, match)
+    }
     season, week := services.DB.FetchCurrentWeek(poolerId)
+    poolers := services.DB.FetchPoolersFromPool(poolId)
+    for i, p := range poolers {
+        log.Printf("[%v] > %v\n", i, p)
+    }
 
-    poolPicks := services.DB.FetchPoolPicks(poolId, season, week)
-    //for matchId, picksMap := range poolPicks {
-    //    log.Printf("Picks for match %v: \n", matchId)
-
-    //    for poolerId, pick := range picksMap {
-    //        log.Printf("\t[%v] > %v\n", poolerId, pick)
-    //    }
-    //}
+    poolPicks := services.DB.FetchPicks(poolers, season, week)
+    for k, v := range poolPicks {
+        log.Printf("[%v] > ...\n", k)
+        for mid, pick := range v {
+            log.Printf("\t[%v]: %v\n", mid, pick)
+        }
+    }
 
     c.Layout = "layout.html"
     c.TplName = "Pools-index.tpl"
@@ -43,7 +50,7 @@ func (c *PoolsController) Get() {
     c.Data["pooler"] = poolerId.Hex()
     //TODO: use MatchData struct to send this info in an object instead, easier for rendering
     c.Data["matches"] = matches
-    c.Data["picks"] = poolPicks
+    //c.Data["picks"] = poolPicks
 
     c.Render()
 }

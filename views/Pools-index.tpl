@@ -29,8 +29,6 @@
             <div>{{.HomeTeam}}</div>
 
             <div>{{.EventId}}</div>
-
-            {{ $curr := .picks }}
         {{ end }}
     </div>
 

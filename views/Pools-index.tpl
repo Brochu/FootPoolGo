@@ -27,9 +27,12 @@
 
             <div>{{.HomeScore}}</div>
             <div>{{.HomeTeam}}</div>
+
+            <div>{{.EventId}}</div>
         {{ end }}
     </div>
 
+    <p>{{.picks}}</p>
     <p>for user/pooler: </p>
     <p>{{.user}} / {{.pooler}}</p>
   </div>

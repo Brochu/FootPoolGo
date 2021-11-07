@@ -74,6 +74,10 @@ func (db* DBContext) InitDBContext() {
 }
 
 // Database queries
+//-----------------------------------
+// GET POOLER INFO
+// ret: User Id, Pooler Id, Pool Id
+//-----------------------------------
 func (db* DBContext) FetchPooler(email string) (prim.ObjectID, prim.ObjectID, prim.ObjectID) {
     userCollection, _ := beego.AppConfig.String("DB_USER_COLLECT")
     filter := bson.M {
@@ -100,6 +104,10 @@ func (db* DBContext) FetchPooler(email string) (prim.ObjectID, prim.ObjectID, pr
     return u.ID, p.ID, p.PoolId
 }
 
+//-----------------------------------
+// GET CURRENT WEEK
+// ret: Season , Week
+//-----------------------------------
 func (db* DBContext) FetchCurrentWeek(pooler prim.ObjectID) (int, int) {
     picksCollection, _ := beego.AppConfig.String("DB_PICK_COLLECT")
 
@@ -133,17 +141,46 @@ func (db* DBContext) FetchCurrentWeek(pooler prim.ObjectID) (int, int) {
     return ps.Season, pw.Week
 }
 
-func (db* DBContext) FetchPoolPicks(pool prim.ObjectID, season int, week int) map[prim.ObjectID]map[string]string {
-    //TODO: Get all poolers from pool
-    //TODO: Fetch picks for each poolers, aggregate all into one map
+//-----------------------------------
+// GET PICKS FOR ALL MEMBERS IN THE SENT POOL ID
+// ret: map[poolerId] => map[matchId] => match pick
+//-----------------------------------
+func (db* DBContext) FetchPoolPicks(pool prim.ObjectID, season int, week int) map[string]map[prim.ObjectID]string {
+    // Get all poolers from pool
+    poolersCol, _ := beego.AppConfig.String("DB_POOLER_COLLECT")
+    poolFilter := bson.M {
+        "pool_id": pool,
+    }
+    cursor, err := DB.Data.Collection(poolersCol).Find(context.TODO(), poolFilter)
+    if err != nil {
+        log.Fatalf("[MONGO][FetchPoolPicks] season |%v| week |%v| - %v", season, week, err)
+    }
+    defer cursor.Close(context.TODO())
 
-    result := make(map[prim.ObjectID]map[string]string)
-    result[pool] = make(map[string]string)
-    result[pool]["test"] = "match"
+    result := make(map[string]map[prim.ObjectID]string)
+    for cursor.Next(context.TODO()) {
+        var p Pooler
+        cursor.Decode(&p)
+
+        // Fetch picks for each poolers, aggregate all into one map
+        picksData := DB.FetchPoolerPicks(p.ID, season, week)
+        for matchId, pick := range picksData {
+            if m, ok := result[matchId]; ok {
+                m[p.ID] = pick
+            } else {
+                result[matchId] = make(map[prim.ObjectID]string)
+                result[matchId][p.ID] = pick
+            }
+        }
+    }
 
     return result
 }
 
+//-----------------------------------
+// GET PICKS FOR GIVEN POOLER ID
+// ret: map[matchId] => match pick
+//-----------------------------------
 func (db* DBContext) FetchPoolerPicks(pooler prim.ObjectID, season int, week int) map[string]string {
     picksCollection, _ := beego.AppConfig.String("DB_PICK_COLLECT")
 
@@ -152,16 +189,20 @@ func (db* DBContext) FetchPoolerPicks(pooler prim.ObjectID, season int, week int
         "season": season,
         "week": week,
     }
-    log.Printf("[MongoService] Fetching all picks for season:%v; week:%v", season, week)
 
-    var p Pick
-    err := DB.Data.Collection(picksCollection).FindOne(context.TODO(), picksFilter).Decode(&p)
+    cursor, err := DB.Data.Collection(picksCollection).Find(context.TODO(), picksFilter)
     if err != nil {
-        log.Fatalf("[MONGO][FetchAllPicks] season |%v| week |%v| - %v", season, week, err)
+        log.Fatalf("[MONGO][FetchPoolerPicks] season |%v| week |%v| - %v", season, week, err)
     }
+    defer cursor.Close(context.TODO())
 
     var picks map[string]string
-    json.Unmarshal([]byte(p.PickString), &picks)
+    for cursor.Next(context.TODO()) {
+        var p Pick
+        cursor.Decode(&p)
+        json.Unmarshal([]byte(p.PickString), &picks)
+    }
+
     return picks
 }
 

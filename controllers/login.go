@@ -45,6 +45,7 @@ func (c *LoginController) Callback() {
 }
 
 func (c *LoginController) Logout() {
+
     err := c.DestroySession()
     if err != nil {
         c.Abort("500")

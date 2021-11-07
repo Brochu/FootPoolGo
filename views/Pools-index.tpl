@@ -21,7 +21,7 @@
     }
     -->
     <div class="match-list">
-        {{  range .matches }}
+        {{ range .matches }}
             <div>{{.AwayTeam}}</div>
             <div>{{.AwayScore}}</div>
 
@@ -29,6 +29,10 @@
             <div>{{.HomeTeam}}</div>
 
             <div>{{.EventId}}</div>
+
+            {{ range .picks[.EventId] }}
+                <div>lo</div>
+            {{ end }}
         {{ end }}
     </div>
 

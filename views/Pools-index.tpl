@@ -21,20 +21,25 @@
     }
     -->
     <div class="match-list">
-        {{ range .matches }}
-            <div>{{.AwayTeam}}</div>
-            <div>{{.AwayScore}}</div>
+        {{ range .pooldata }}
+            <div>{{.Match.AwayTeam}}</div>
+            <div>{{.Match.AwayScore}}</div>
 
-            <div>{{.HomeScore}}</div>
-            <div>{{.HomeTeam}}</div>
+            <div>{{.Match.HomeScore}}</div>
+            <div>{{.Match.HomeTeam}}</div>
 
-            <div>{{.EventId}}</div>
+            <div>{{.Match.EventId}}</div>
+            <div>
+                {{ range $k, $v := .Picks }}
+                    <p>{{$v}}</p>
+                {{ end }}
+            </div>
         {{ end }}
     </div>
 
-    <p>{{.picks}}</p>
     <p>for user/pooler: </p>
     <p>{{.user}} / {{.pooler}}</p>
   </div>
 
 </main>
+

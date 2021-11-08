@@ -12,6 +12,14 @@ body
 .match-list
 {
     display: grid;
-    grid-template-columns: 1fr 0.5fr 0.5fr 1fr 1fr 1fr;
+    grid-template-columns: 1fr 0.5fr 0.5fr 1fr 3fr;
+    margin: 30px auto;
+}
+
+.pick-list
+{
+    display: grid;
+    /*grid-template-columns: repeat(auto-fit, 50px);*/
+    grid-template-columns: 1fr 1fr 1fr 1fr;
 }
 

@@ -39,8 +39,7 @@ func (c *PoolsController) Get() {
     c.Data["season"] = season
     c.Data["week"] = week
 
-    c.Data["user"] = (c.GetSession("userId").(primitive.ObjectID)).Hex()
-    c.Data["pooler"] = poolerId.Hex()
+    c.Data["poolers"] = poolers;
     c.Data["pooldata"] = poolData
 
     c.Render()

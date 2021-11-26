@@ -15,6 +15,7 @@ type PoolsController struct {
 type MatchData struct {
     Match services.Match
     Picks map[primitive.ObjectID]string
+    Result map[primitive.ObjectID]int
 }
 
 func (c *PoolsController) Get() {
@@ -28,7 +29,7 @@ func (c *PoolsController) Get() {
 
     // Could be done together?
     //season, week := services.DB.FetchCurrentWeek(poolerId)
-    season, week := 2021, 9
+    season, week := 2021, 10
     poolers := services.DB.FetchPoolersFromPool(poolId)
     // ------------------------------
 
@@ -44,14 +45,8 @@ func (c *PoolsController) Get() {
         winner, isTie := GetWinner(&match)
         log.Printf("[%v] > winner = %v [%v]\n", match.EventId, winner, isTie)
 
-        for _, pooler := range poolers {
-            log.Printf("[%v] > %v\n",
-                pooler.Name,
-                poolPicks[match.EventId][pooler.ID],
-            )
-        }
-        //TODO: Fill in results data
         poolData[i].Picks = poolPicks[match.EventId]
+        poolData[i].Result = ComputeScores(poolData[i].Picks, winner, isTie, week);
     }
 
     c.Layout = "layout.html"
@@ -75,6 +70,40 @@ func GetWinner(m* services.Match) (string, bool) {
 
     } else {
         return services.NflAPI.GetShortname(m.HomeTeam), false;
+    }
+}
+
+func ComputeScores(picks map[primitive.ObjectID]string, winner string, isTie bool, week int) map[primitive.ObjectID]int {
+    scores := make(map[primitive.ObjectID]int)
+
+    //TODO: Check for unique pick
+
+    for poolerId, pick := range picks {
+        score := GetScore(winner == pick, isTie, false, week)
+        log.Printf("[%v] > %v (%v)\n", poolerId, pick, score)
+
+        scores[poolerId] = score
+    }
+
+    return scores;
+}
+
+func GetScore(isGood bool, isTied bool, isUnique bool, week int) int {
+    //TODO: Scale points by week num
+    right := 2;
+
+    switch {
+
+    case isUnique:
+        return (int)(float64(right) * 1.5);
+    case isGood:
+        return right;
+
+    case isTied:
+        return 1;
+
+    default:
+        return 0;
     }
 }
 

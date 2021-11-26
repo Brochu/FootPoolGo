@@ -49,7 +49,7 @@
                     <td>{{.Match.HomeScore }}</td>
                     <td class="home-team">{{.Match.HomeTeam }}</td>
 
-                    {{ range $poolerId, $pick := .Picks }}
+                    {{ range $poolerId, $pick := .Result }}
                         <td>{{$pick}}</td>
                     {{ end }}
                 </tr>
